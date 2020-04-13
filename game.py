@@ -21,7 +21,7 @@ class Game:
         self.road_width = self.road_texture.get_width()
         self.road_height = self.road_texture.get_height()
         self.player_car = pygame.image.load(self.player.sprite)
-        self.player_car = pygame.transform.scale(self.player_car, (150, 250))
+        self.player_car = pygame.transform.scale(self.player_car, (100, 150))
         self.ground = pygame.Surface((640, 240)).convert()
         self.ground.fill((0, 100, 0))
         self.resolution = 1
@@ -36,6 +36,7 @@ class Game:
         self.x_move = int(self.player.move_speed * cos(radians(self.view_angle)))
         self.y_move = - int(self.player.move_speed * sin(radians(self.view_angle)))
         self.rotation_speed = 3
+        self.player_location = [240,340]
 
     def play (self):
         pygame.key.set_repeat()
@@ -63,6 +64,10 @@ class Game:
             self.player.player_pos[0] += self.x_move
             self.player.player_pos[1] += self.y_move
             self.player.food -= 2
+        if keys[pygame.K_RIGHT]:
+            self.player_location[0] += 10
+        if keys[pygame.K_LEFT]:
+            self.player_location[0] -= 10
 
         beta = radians(self.view_angle - self.ray_angle)
         cos_beta = cos(beta)
@@ -74,20 +79,26 @@ class Game:
         while wall_bottom > self.plane_center + 10:
             wall_bottom -= self.resolution
             row = wall_bottom - self.plane_center
+
             straight_p_dist = (self.player.player_height / row * self.to_plane_dist)
             to_floor_dist = (straight_p_dist / cos_beta)
+
             ray_x = int(self.player.player_pos[0] + (to_floor_dist * cos_angle))
             ray_y = int(self.player.player_pos[1] + (to_floor_dist * sin_angle))
+
             floor_x = (ray_x % self.road_width)
             floor_y = (ray_y % self.road_height)
+
             slice_width = int(self.road_width / to_floor_dist * self.to_plane_dist)
             slice_x = (self.WIDTH / 2) - (slice_width // 2)
+
             dx = slice_x
             row_slice = self.road_texture.subsurface(0, floor_y, self.road_width, 1)
             row_slice = pygame.transform.scale(row_slice, (slice_width, self.resolution))
+
             self.window.blit(self.texture, (0, wall_bottom), (0, floor_y, self.WIDTH, self.resolution))
             self.window.blit(row_slice, (slice_x, wall_bottom))
-            self.window.blit(self.player_car, (240, 320))
+            self.window.blit(self.player_car, self.player_location)
 
         pygame.display.flip()
         self.window.fill((0, 0, 255))
