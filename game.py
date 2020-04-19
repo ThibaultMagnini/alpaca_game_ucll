@@ -11,7 +11,7 @@ class Game:
         self.grid_width = 64
         self.wall_height = 64
         self.wall_width = 64
-        self.player = Player(100, 'sprites/download.png', 15, [160, 224], self.wall_height/2)
+        self.player = Player(100, 'sprites/stand.png', 15, [160, 224], self.wall_height/2)
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
         self.running = True
@@ -37,10 +37,13 @@ class Game:
         self.y_move = - int(self.player.move_speed * sin(radians(self.view_angle)))
         self.rotation_speed = 3
         self.player_location = [240,340]
+        self.changesprite = 0
 
     def play (self):
         pygame.key.set_repeat()
         self.clock.tick(30)
+
+        self.changesprite += 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -56,18 +59,43 @@ class Game:
         self.player.move_speed = 15
 
         if keys[pygame.K_UP]:
+            if (self.player.sprite == 'sprites/stand.png'):
+                if (self.changesprite >= 3):
+                    self.player.sprite = 'sprites/start.png'
+                    self.changesprite = 0
+            elif (self.player.sprite == 'sprites/start.png'):
+                if (self.changesprite >= 3):
+                    self.player.sprite = 'sprites/wandelen.png'
+                    self.changesprite = 0
+            else:
+                if (self.changesprite >= 3):
+                    self.player.sprite = 'sprites/stand.png'
+                    self.changesprite = 0
+            self.player_car = pygame.image.load(self.player.sprite)
+            self.player_car = pygame.transform.scale(self.player_car, (100, 150))
             self.player.player_pos[0] += self.x_move
             self. player.player_pos[1] += self.y_move
             self.player.food -= 0.1
         if keys[pygame.K_SPACE]:
+            if (self.player.sprite == 'sprites/stand.png'):
+                self.player.sprite = 'sprites/start.png'
+            elif (self.player.sprite == 'sprites/start.png'):
+                self.player.sprite = 'sprites/wandelen.png'
+            else:
+                self.player.sprite = 'sprites/stand.png'
+
+            self.player_car = pygame.image.load(self.player.sprite)
+            self.player_car = pygame.transform.scale(self.player_car, (100, 150))
             self.player.move_speed = 30
             self.player.player_pos[0] += self.x_move
             self.player.player_pos[1] += self.y_move
             self.player.food -= 2
         if keys[pygame.K_RIGHT]:
-            self.player_location[0] += 10
+            if (self.player_location[0] + 100 < self.WIDTH):
+                self.player_location[0] += 10
         if keys[pygame.K_LEFT]:
-            self.player_location[0] -= 10
+            if (self.player_location[0] > 0):
+                self.player_location[0] -= 10
 
         beta = radians(self.view_angle - self.ray_angle)
         cos_beta = cos(beta)
