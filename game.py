@@ -1,4 +1,5 @@
 import pygame
+from pygame.transform import scale
 from player import Player
 from math import *
 
@@ -17,6 +18,7 @@ class Game:
         self.running = True
         self.texture = pygame.image.load('sprites/stripes.png').convert()
         self.texture = pygame.transform.scale(self.texture, (WIDTH, self.texture.get_height()))
+        self.tree = pygame.image.load('sprites/tree.png').convert_alpha()
         self.road_texture = pygame.image.load('sprites/road3.png').convert()
         self.road_width = self.road_texture.get_width()
         self.road_height = self.road_texture.get_height()
@@ -38,6 +40,12 @@ class Game:
         self.rotation_speed = 3
         self.player_location = [240,340]
         self.changesprite = 0
+
+        self.eye_viewplane_distance = 1
+        self.eye_height = 0.6
+        self.road_size = 4
+        self.player_z = 0
+
 
     def play (self):
         pygame.key.set_repeat()
@@ -75,6 +83,7 @@ class Game:
             self.player_car = pygame.transform.scale(self.player_car, (100, 150))
             self.player.player_pos[0] += self.x_move
             self. player.player_pos[1] += self.y_move
+            self.player_z += 0.2
             self.player.food -= 0.1
         if keys[pygame.K_SPACE]:
             if (self.player.sprite == 'sprites/stand.png'):
@@ -104,29 +113,69 @@ class Game:
 
         wall_bottom = self.HEIGHT
 
-        while wall_bottom > self.plane_center + 10:
-            wall_bottom -= self.resolution
-            row = wall_bottom - self.plane_center
+        for y in range(int(self.HEIGHT * 0.5), self.HEIGHT):
+            vpx, vpy = self.screen_to_viewplane_coordinates(0, y)
+            wx, wy, wz = self.viewplane_to_world_coordinates(vpx, vpy)
+            vpx, vpy, vpz = self.world_to_viewplane_coordinates(-self.road_size / 2, 0, wz)
+            sx1, sy1 = self.viewplane_to_screen_coordinates(vpx, vpy)
+            sx2, sy2 = self.viewplane_to_screen_coordinates(-vpx, vpy)
 
-            straight_p_dist = (self.player.player_height / row * self.to_plane_dist)
-            to_floor_dist = (straight_p_dist / cos_beta)
+            if sx1 < sx2:
+                row = scale(self.road_texture.subsurface(0, 0, self.road_width, 1), (sx2 - sx1, 1))
+                self.window.blit(row, (sx1, y))
 
-            ray_x = int(self.player.player_pos[0] + (to_floor_dist * cos_angle))
-            ray_y = int(self.player.player_pos[1] + (to_floor_dist * sin_angle))
 
-            floor_x = (ray_x % self.road_width)
-            floor_y = (ray_y % self.road_height)
+        object_size = 4
+        for distance in range(10, 1, -1):
+            z = distance - self.player_z % 1
+            self.draw_object(self.tree, (-self.road_size * 0.4, 0, z), (object_size, object_size))
+            self.draw_object(self.tree, (self.road_size * 0.4, 0, z), (object_size, object_size))
 
-            slice_width = int(self.road_width / to_floor_dist * self.to_plane_dist)
-            slice_x = (self.WIDTH / 2) - (slice_width // 2)
+        # assert False
 
-            dx = slice_x
-            row_slice = self.road_texture.subsurface(0, floor_y, self.road_width, 1)
-            row_slice = pygame.transform.scale(row_slice, (slice_width, self.resolution))
 
-            self.window.blit(self.texture, (0, wall_bottom), (0, floor_y, self.WIDTH, self.resolution))
-            self.window.blit(row_slice, (slice_x, wall_bottom))
-            self.window.blit(self.player_car, self.player_location)
+        self.window.blit(self.player_car, self.player_location)
 
         pygame.display.flip()
         self.window.fill((0, 0, 255))
+
+    def world_to_viewplane_coordinates(self, px, py, pz):
+        d = self.eye_viewplane_distance
+        h = self.eye_height
+        t = d / (pz + d)
+        x = px * t
+        y = h + (py -h) * t
+        z = 0
+        return (x, y, z)
+
+    def viewplane_to_world_coordinates(self, px, py):
+        d = self.eye_viewplane_distance
+        h = self.eye_height
+        t = h / (h - py)
+        x = px * t
+        y = 0
+        z = (t - 1) * d
+        return (x, y, z)
+
+    def screen_to_viewplane_coordinates(self, px, py):
+        x = (px - self.WIDTH / 2) / self.WIDTH
+        y = 1 - py / self.HEIGHT
+        return (x, y)
+
+    def viewplane_to_screen_coordinates(self, px, py):
+        x = int(px * self.WIDTH + self.WIDTH // 2)
+        y = int((1 - py) * self.HEIGHT)
+        return (x, y)
+
+    def draw_object(self, image, position, size):
+        x, y, z = position
+        w, h = size
+        vpx1, vpy1, vpz1 = self.world_to_viewplane_coordinates(x, y, z)
+        vpx1, vpy1, vpz1 = self.world_to_viewplane_coordinates(x - w / 2, y, z)
+        vpx2, vpy2, vpz2 = self.world_to_viewplane_coordinates(x + w / 2, y + h, z)
+        sx1, sy1 = self.viewplane_to_screen_coordinates(vpx1, vpy1)
+        sx2, sy2 = self.viewplane_to_screen_coordinates(vpx2, vpy2)
+        # pygame.draw.rect(self.window, (255, 0, 0), pygame.Rect((sx1, sy1), (abs(sx2-sx1), abs(sy2-sy1))))
+        # pygame.draw.circle(self.window, (255, 0, 0), (sx1, sy1), 2)
+        scaled = scale(image, (abs(sx2 - sx1), abs(sy2 - sy1)))
+        self.window.blit(scaled, (sx1, sy2))
