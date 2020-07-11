@@ -64,7 +64,7 @@ class Game:
                     self.player.sprite = 'sprites/start.png'
                     self.changesprite = 0
             elif (self.player.sprite == 'sprites/start.png'):
-                if (self.changesprite >= 3):
+                if self.changesprite >= 3:
                     self.player.sprite = 'sprites/wandelen.png'
                     self.changesprite = 0
             else:
