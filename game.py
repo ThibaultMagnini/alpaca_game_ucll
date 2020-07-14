@@ -66,6 +66,19 @@ class Game:
 
         self.player.move_speed = 15
 
+        if keys[pygame.K_q]:
+            self.eye_height *= 1.1
+            print(f'h={self.eye_height}')
+        if keys[pygame.K_w]:
+            self.eye_height *= 0.9
+            print(f'h={self.eye_height}')
+        if keys[pygame.K_a]:
+            self.eye_viewplane_distance *= 1.1
+            print(f'd={self.eye_viewplane_distance}')
+        if keys[pygame.K_s]:
+            self.eye_viewplane_distance *= 0.9
+            print(f'd={self.eye_viewplane_distance}')
+
         if keys[pygame.K_UP]:
             if (self.player.sprite == 'sprites/stand.png'):
                 if (self.changesprite >= 3):
@@ -161,11 +174,13 @@ class Game:
         x = (px - self.WIDTH / 2) / self.WIDTH
         y = 1 - py / self.HEIGHT
         return (x, y)
+        # return (px - self.WIDTH / 2, py)
 
     def viewplane_to_screen_coordinates(self, px, py):
         x = int(px * self.WIDTH + self.WIDTH // 2)
         y = int((1 - py) * self.HEIGHT)
         return (x, y)
+        # return (int(px)+self.WIDTH // 2, int(py))
 
     def draw_object(self, image, position, size):
         x, y, z = position
