@@ -8,6 +8,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Audio files
+*.wav
+
 # Distribution / packaging
 .Python
 env/

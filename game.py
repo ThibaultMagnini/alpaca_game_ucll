@@ -39,7 +39,8 @@ class Game:
         self.player_location = [240,340]
         self.changesprite = 0
 
-    def play (self):
+
+    def play(self):
         pygame.key.set_repeat()
         self.clock.tick(30)
 
