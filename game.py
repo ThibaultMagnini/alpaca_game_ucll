@@ -12,13 +12,16 @@ class Game:
         self.grid_width = 64
         self.wall_height = 64
         self.wall_width = 64
-        self.player = Player(100, 'sprites/stand.png', 15, [160, 224], self.wall_height/2)
+        self.player = Player(100, 'sprites/loop1.png', 15, [160, 224], self.wall_height/2)
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
         self.running = True
         self.texture = pygame.image.load('sprites/stripes.png').convert()
         self.texture = pygame.transform.scale(self.texture, (WIDTH, self.texture.get_height()))
-        self.tree = pygame.image.load('sprites/tree.png').convert_alpha()
+        self.background = pygame.image.load('sprites/background.jpg').convert()
+
+        self.tree = pygame.image.load('sprites/bush.png').convert_alpha()
+        self.pizza = pygame.image.load('sprites/burger.png').convert()
         self.road_texture = pygame.image.load('sprites/road3.png').convert()
         self.road_width = self.road_texture.get_width()
         self.road_height = self.road_texture.get_height()
@@ -38,7 +41,7 @@ class Game:
         self.x_move = int(self.player.move_speed * cos(radians(self.view_angle)))
         self.y_move = - int(self.player.move_speed * sin(radians(self.view_angle)))
         self.rotation_speed = 3
-        self.player_location = [240,340]
+        self.player_location = [240,320]
         self.changesprite = 0
 
         self.eye_viewplane_distance = 1
@@ -66,13 +69,13 @@ class Game:
 
         self.player.move_speed = 15
 
-        if keys[pygame.K_q]:
-            self.eye_height *= 1.1
-            print(f'h={self.eye_height}')
-        if keys[pygame.K_w]:
-            self.eye_height *= 0.9
-            print(f'h={self.eye_height}')
+        if keys[pygame.K_d]:
+            if self.player_location[0] + 100 < self.WIDTH:
+                self.player_location[0] += 10
         if keys[pygame.K_a]:
+            if self.player_location[0] > 0 < self.WIDTH:
+                self.player_location[0] -= 10
+        if keys[pygame.K_w]:
             self.eye_viewplane_distance *= 1.1
             print(f'd={self.eye_viewplane_distance}')
         if keys[pygame.K_s]:
@@ -80,31 +83,39 @@ class Game:
             print(f'd={self.eye_viewplane_distance}')
 
         if keys[pygame.K_UP]:
-            if (self.player.sprite == 'sprites/stand.png'):
-                if (self.changesprite >= 3):
-                    self.player.sprite = 'sprites/start.png'
+            if self.player.sprite == 'sprites/loop4.png':
+                if self.changesprite >= 3:
+                    self.player.sprite = 'sprites/loop1.png'
                     self.changesprite = 0
-            elif (self.player.sprite == 'sprites/start.png'):
-                if (self.changesprite >= 3):
-                    self.player.sprite = 'sprites/wandelen.png'
+            elif self.player.sprite == 'sprites/loop1.png':
+                if self.changesprite >= 3:
+                    self.player.sprite = 'sprites/loop2.png'
+                    self.changesprite = 0
+            elif self.player.sprite == 'sprites/loop2.png':
+                if self.changesprite >= 3:
+                    self.player.sprite = 'sprites/loop3.png'
                     self.changesprite = 0
             else:
-                if (self.changesprite >= 3):
-                    self.player.sprite = 'sprites/stand.png'
+                if self.changesprite >= 3:
+                    self.player.sprite = 'sprites/loop4.png'
                     self.changesprite = 0
+
             self.player_car = pygame.image.load(self.player.sprite)
             self.player_car = pygame.transform.scale(self.player_car, (100, 150))
             self.player.player_pos[0] += self.x_move
             self. player.player_pos[1] += self.y_move
             self.player_z += 0.2
             self.player.food -= 0.1
+
         if keys[pygame.K_SPACE]:
-            if (self.player.sprite == 'sprites/stand.png'):
-                self.player.sprite = 'sprites/start.png'
-            elif (self.player.sprite == 'sprites/start.png'):
-                self.player.sprite = 'sprites/wandelen.png'
+            if (self.player.sprite == 'sprites/loop4.png'):
+                self.player.sprite = 'sprites/loop1.png'
+            elif (self.player.sprite == 'sprites/loop1.png'):
+                self.player.sprite = 'sprites/loop2.png'
+            elif (self.player.sprite == 'sprites/loop2.png'):
+                self.player.sprite = 'sprites/loop3.png'
             else:
-                self.player.sprite = 'sprites/stand.png'
+                self.player.sprite = 'sprites/loop4.png'
 
             self.player_car = pygame.image.load(self.player.sprite)
             self.player_car = pygame.transform.scale(self.player_car, (100, 150))
@@ -112,6 +123,7 @@ class Game:
             self.player.player_pos[0] += self.x_move
             self.player.player_pos[1] += self.y_move
             self.player.food -= 2
+
         if keys[pygame.K_RIGHT]:
             if (self.player_location[0] + 100 < self.WIDTH):
                 self.player_location[0] += 10
@@ -126,6 +138,8 @@ class Game:
 
         wall_bottom = self.HEIGHT
 
+        self.window.blit(self.background, (0, 0))
+
         for y in range(int(self.HEIGHT * 0.5), self.HEIGHT):
             vpx, vpy = self.screen_to_viewplane_coordinates(0, y)
             wx, wy, wz = self.viewplane_to_world_coordinates(vpx, vpy)
@@ -137,15 +151,15 @@ class Game:
                 row = scale(self.road_texture.subsurface(0, 0, self.road_width, 1), (sx2 - sx1, 1))
                 self.window.blit(row, (sx1, y))
 
-
-        object_size = 4
-        for distance in range(10, 1, -1):
+        object_size = 0.5
+        for distance in range(20, 1, -1):
             z = distance - self.player_z % 1
-            self.draw_object(self.tree, (-self.road_size * 0.4, 0, z), (object_size, object_size))
-            self.draw_object(self.tree, (self.road_size * 0.4, 0, z), (object_size, object_size))
-
-        # assert False
-
+            i, j, f = self.world_to_viewplane_coordinates(-self.road_size * 0.4, -0.4, z)
+            k, f = self.viewplane_to_screen_coordinates(i, j)
+            if self.HEIGHT * 0.5 <= f <= self.HEIGHT:
+                self.draw_object(self.tree, (-self.road_size * 0.4, -0.4, z), (object_size, object_size))
+                self.draw_object(self.tree, (self.road_size * 0.42, -0.4, z), (object_size, object_size))
+                self.draw_object(self.pizza, (0, -0.4, 5 - self.player_z % 1), (0.4, 0.4))
 
         self.window.blit(self.player_car, self.player_location)
 
