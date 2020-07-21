@@ -12,6 +12,9 @@ pygame.display.set_caption("Alapaca game!")
 game = Game(screen, CLOCK, WIDTH, HEIGHT)
 
 while game.running:
+    # while game.readytoplay:
+    #     game.welcomeScreen()
+    while game.userSelected:
+        game.showmenu()
 
-    game.menu()
-
+    game.play()

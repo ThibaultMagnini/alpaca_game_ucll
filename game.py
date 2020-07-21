@@ -1,7 +1,9 @@
 import pygame
 from player import Player
 from math import *
-
+from menu import *
+import pygame.freetype
+import database
 
 class Game:
     def __init__(self, window, clock, WIDTH, HEIGHT):
@@ -38,7 +40,9 @@ class Game:
         self.rotation_speed = 3
         self.player_location = [240,340]
         self.changesprite = 0
-
+        self.menu = Menu()
+        self.userSelected = True
+        # self.readytoplay = True
 
     def play(self):
         pygame.key.set_repeat()
@@ -131,3 +135,84 @@ class Game:
 
         pygame.display.flip()
         self.window.fill((0, 0, 255))
+
+    def showmenu(self):
+        pygame.mixer.init()
+        pygame.mixer.music.set_volume(0.7)
+        pygame.key.set_repeat()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                if self.menu.selected < 26:
+                    self.menu.selected += 1
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                if self.menu.selected > 0:
+                    self.menu.selected -= 1
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+                if self.menu.selected - 9 >= 0:
+                    self.menu.selected -= 9
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                if self.menu.selected + 9 <= 26:
+                    self.menu.selected += 9
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if database.get_alpaca_with_username(self.menu.username.lower()) is not None:
+                    self.userSelected = False
+                    print(database.get_alpaca_with_username(self.menu.username.lower()))
+                else:
+                    self.menu.errorSound.play()
+                    self.menu.font3.render_to(self.window, (40, 80), "The entered username does not exist!", (250, 0, 0))
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+
+                if self.menu.selected != 26 and len(self.menu.username) < 11:
+                    self.menu.username += self.menu.letters[self.menu.selected]
+                    self.menu.selectSound.play()
+                elif 11 > len(self.menu.username) > 0:
+                    self.menu.username = self.menu.username[:-1]
+                    self.menu.deleteSound.play()
+                    pygame.draw.rect(self.window, (0, 0, 0), (80, 140, 600, 60))
+
+                img, f = self.menu.font.render(self.menu.username, (0, 250, 0))
+                self.window.blit(img, (80, 140))
+
+        counter = 80
+        line = 240
+        for letter in self.menu.letters:
+            if self.menu.letters[self.menu.selected] == letter:
+                surface, rect = self.menu.font.render(letter, (220, 0, 0))
+            else:
+                surface, recta = self.menu.font.render(letter, (0, 0, 220))
+            self.window.blit(surface, (counter, line))
+            counter += 55
+            if counter == 575:
+                counter = 80
+                line += 50
+
+        self.menu.font2.render_to(self.window, (80, 400), "Press Enter To Continue", (0, 0, 220))
+        self.menu.font2.render_to(self.window, (60, 50), "Please enter your username!", (0, 0, 220))
+        pygame.display.update()
+        pygame.display.flip()
+
+    # def welcomeScreen(self):
+    #     for event in pygame.event.get():
+    #         if event.type == pygame.QUIT:
+    #             self.running = False
+    #
+    #         if event.type == pygame.KEYDOWN:
+    #             pygame.draw.rect(self.window, (0, 0, 0), (50, 300, 1000, 100))
+    #             self.readytoplay = False
+    #             self.userSelected = True
+    #
+    #     font = pygame.freetype.Font('ARCADE_N.TTF', 25)
+    #     img, f = font.render("Press Any Key TO start!!", (0, 0, 250))
+    #     self.window.blit(img, (50, 300))
+    #     pygame.display.update()
+    #     pygame.display.flip()
+
