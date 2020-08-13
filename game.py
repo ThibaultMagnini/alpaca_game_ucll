@@ -10,6 +10,7 @@ import pygame.freetype
 import database
 import game_math
 
+
 class Game:
     def __init__(self, window, clock, WIDTH, HEIGHT):
         self.window = window
@@ -18,10 +19,12 @@ class Game:
         self.grid_width = 64
         self.wall_height = 64
         self.wall_width = 64
-        self.player = Player(100, 'sprites/stand.png', 15, [160, 224], self.wall_height/2)
+        self.player = Player(100, 'sprites/loop1.png', 15, [160, 224], self.wall_height/2)
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
         self.running = True
+        self.tree = pygame.image.load('sprites/bush.png').convert_alpha()
+        self.pizza = pygame.image.load('sprites/burger.png').convert()
         self.texture = pygame.image.load('sprites/stripes.png').convert()
         self.texture = pygame.transform.scale(self.texture, (WIDTH, self.texture.get_height()))
         self.road_texture = pygame.image.load('sprites/road3.png').convert()
@@ -54,6 +57,8 @@ class Game:
         self.background = pygame.image.load('sprites/background.jpg').convert()
         # self.readytoplay = True
 
+    ################################################# Gameplay ###################################################
+
     def play(self):
         pygame.key.set_repeat()
         self.clock.tick(30)
@@ -73,31 +78,56 @@ class Game:
 
         self.player.move_speed = 15
 
+    ################################################   Movement   ###########################################
+
+        if keys[pygame.K_d]:
+            if self.player_location[0] + 100 < self.WIDTH:
+                self.player_location[0] += 10
+        if keys[pygame.K_a]:
+            if self.player_location[0] > 0 < self.WIDTH:
+                self.player_location[0] -= 10
+        if keys[pygame.K_w]:
+            self.eye_viewplane_distance *= 1.1
+            print(f'd={self.eye_viewplane_distance}')
+        if keys[pygame.K_s]:
+            self.eye_viewplane_distance *= 0.9
+            print(f'd={self.eye_viewplane_distance}')
+
+
         if keys[pygame.K_UP]:
-            if self.player.sprite == 'sprites/stand.png':
+            if self.player.sprite == 'sprites/loop4.png':
                 if self.changesprite >= 3:
-                    self.player.sprite = 'sprites/start.png'
+                    self.player.sprite = 'sprites/loop1.png'
                     self.changesprite = 0
-            elif self.player.sprite == 'sprites/start.png':
+            elif self.player.sprite == 'sprites/loop1.png':
                 if self.changesprite >= 3:
-                    self.player.sprite = 'sprites/wandelen.png'
+                    self.player.sprite = 'sprites/loop2.png'
+                    self.changesprite = 0
+            elif self.player.sprite == 'sprites/loop2.png':
+                if self.changesprite >= 3:
+                    self.player.sprite = 'sprites/loop3.png'
                     self.changesprite = 0
             else:
                 if self.changesprite >= 3:
-                    self.player.sprite = 'sprites/stand.png'
+                    self.player.sprite = 'sprites/loop4.png'
                     self.changesprite = 0
+
             self.player_car = pygame.image.load(self.player.sprite)
             self.player_car = pygame.transform.scale(self.player_car, (100, 150))
             self.player.player_pos[0] += self.x_move
-            self. player.player_pos[1] += self.y_move
+            self.player.player_pos[1] += self.y_move
+            self.player_z += 0.2
             self.player.food -= 0.1
+
         if keys[pygame.K_SPACE]:
-            if self.player.sprite == 'sprites/stand.png':
-                self.player.sprite = 'sprites/start.png'
-            elif self.player.sprite == 'sprites/start.png':
-                self.player.sprite = 'sprites/wandelen.png'
+            if self.player.sprite == 'sprites/loop4.png':
+                self.player.sprite = 'sprites/loop1.png'
+            elif self.player.sprite == 'sprites/loop1.png':
+                self.player.sprite = 'sprites/loop2.png'
+            elif self.player.sprite == 'sprites/loop2.png':
+                self.player.sprite = 'sprites/loop3.png'
             else:
-                self.player.sprite = 'sprites/stand.png'
+                self.player.sprite = 'sprites/loop4.png'
 
             self.player_car = pygame.image.load(self.player.sprite)
             self.player_car = pygame.transform.scale(self.player_car, (100, 150))
@@ -105,6 +135,7 @@ class Game:
             self.player.player_pos[0] += self.x_move
             self.player.player_pos[1] += self.y_move
             self.player.food -= 2
+
         if keys[pygame.K_RIGHT]:
             if self.player_location[0] + 100 < self.WIDTH:
                 self.player_location[0] += 10
@@ -117,7 +148,7 @@ class Game:
         cos_angle = cos(radians(self.ray_angle))
         sin_angle = - sin(radians(self.ray_angle))
 
-################################################################
+    ###############################################  Drawing  ###################################################
 
         wall_bottom = self.HEIGHT
 
@@ -137,19 +168,19 @@ class Game:
         object_size = 0.5
         for distance in range(20, 1, -1):
             z = distance - self.player_z % 1
-            i, j, f = game_math.world_to_viewplane_coordinates(-self.road_size * 0.4, -0.4, z)
-            k, f = game_math.viewplane_to_screen_coordinates(i, j)
+            i, j, f = game_math.world_to_viewplane_coordinates(self.eye_viewplane_distance, self.eye_height, -self.road_size * 0.4, -0.4, z)
+            k, f = game_math.viewplane_to_screen_coordinates(self.WIDTH, self.HEIGHT, i, j)
             if self.HEIGHT * 0.5 <= f <= self.HEIGHT:
-                game_math.draw_object(self.tree, (-self.road_size * 0.4, -0.4, z), (object_size, object_size))
-                game_math.draw_object(self.tree, (self.road_size * 0.42, -0.4, z), (object_size, object_size))
-                game_math.draw_object(self.pizza, (0, -0.4, 5 - self.player_z % 1), (0.4, 0.4))
+                game_math.draw_object(self, self.tree, (-self.road_size * 0.4, -0.4, z), (object_size, object_size))
+                game_math.draw_object(self, self.tree, (self.road_size * 0.42, -0.4, z), (object_size, object_size))
+                game_math.draw_object(self, self.pizza, (0, -0.4, 5 - self.player_z % 1), (0.4, 0.4))
 
         self.window.blit(self.player_car, self.player_location)
 
         pygame.display.flip()
         self.window.fill((0, 0, 255))
 
-###############################################################################################
+    ############################################   MENU   ###################################################
 
     def showmenu(self):
         pygame.mixer.init()
@@ -214,6 +245,9 @@ class Game:
         self.menu.font2.render_to(self.window, (60, 50), "Please enter your username!", (0, 0, 220))
         pygame.display.update()
         pygame.display.flip()
+
+
+    ########################################    WELCOME SCREEN    ###########################################
 
     # def welcomeScreen(self):
     #     for event in pygame.event.get():

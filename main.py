@@ -14,7 +14,7 @@ game = Game(screen, CLOCK, WIDTH, HEIGHT)
 while game.running:
     # while game.readytoplay:
     #     game.welcomeScreen()
-    while game.userSelected:
-        game.showmenu()
+    # while game.userSelected:
+    #     game.showmenu()
 
     game.play()

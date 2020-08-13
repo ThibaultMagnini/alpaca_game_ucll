@@ -35,14 +35,14 @@ def viewplane_to_screen_coordinates(w, h, px, py):
     return x, y
 
 
-def draw_object(self, image, position, size):
+def draw_object(game, image, position, size):
     x, y, z = position
     w, h = size
-    vpx1, vpy1, vpz1 = world_to_viewplane_coordinates(x, y, z)
-    vpx1, vpy1, vpz1 = world_to_viewplane_coordinates(x - w / 2, y, z)
-    vpx2, vpy2, vpz2 = world_to_viewplane_coordinates(x + w / 2, y + h, z)
-    sx1, sy1 = viewplane_to_screen_coordinates(vpx1, vpy1)
-    sx2, sy2 = viewplane_to_screen_coordinates(vpx2, vpy2)
+    vpx1, vpy1, vpz1 = world_to_viewplane_coordinates(game.eye_viewplane_distance, game.eye_height, x, y, z)
+    vpx1, vpy1, vpz1 = world_to_viewplane_coordinates(game.eye_viewplane_distance, game.eye_height, x - w / 2, y, z)
+    vpx2, vpy2, vpz2 = world_to_viewplane_coordinates(game.eye_viewplane_distance, game.eye_height, x + w / 2, y + h, z)
+    sx1, sy1 = viewplane_to_screen_coordinates(game.WIDTH, game.HEIGHT, vpx1, vpy1)
+    sx2, sy2 = viewplane_to_screen_coordinates(game.WIDTH, game.HEIGHT, vpx2, vpy2)
     scaled = scale(image, (abs(sx2 - sx1), abs(sy2 - sy1)))
-    self.window.blit(scaled, (sx1, sy2))
+    game.window.blit(scaled, (sx1, sy2))
 

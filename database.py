@@ -1,9 +1,9 @@
 import psycopg2
 
-hostname = ""
-usernamedb = ""
-password = ""
-dbname = ""
+hostname = "alpacagamedb.cda2269fchf7.eu-west-1.rds.amazonaws.com"
+usernamedb = "postgres"
+password = "alpacagamedb"
+dbname = "alpacagamedb"
 
 
 def get_alpaca_with_username(username):
